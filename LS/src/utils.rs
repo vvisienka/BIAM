@@ -36,11 +36,23 @@ where
         f();
         counter+=1;
 
-        if start_time.elapsed().as_millis() >= end_time && counter >= min_iterations{
-            println!("Counter: {counter}, Time: {}", start_time.elapsed().as_millis());
-            break;
+        if counter >= min_iterations {
+            let elapsed = start_time.elapsed().as_millis();
+            if elapsed >= end_time {
+                let avg_runtime_ns = elapsed as f64 / counter as f64;
+                
+                println!("Total Iterations: {counter}");
+                println!("Total Time: {} ms", elapsed);
+                println!("Avg Runtime per call: {:.2} ms", avg_runtime_ns);
+                break;
+            }
         }
+        // if start_time.elapsed().as_millis() >= end_time && counter >= min_iterations{
+        //     println!("Counter: {counter}, Time: {}", start_time.elapsed().as_millis());
+        //     break;
+        // }
     }
+    //RT = delta t/C ??
 }
 
 //Loading instance data

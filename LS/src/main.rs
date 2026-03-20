@@ -21,7 +21,7 @@ fn main() {
     }
 
     let end_time = 100;
-    let min_iterations = 1;
+    let min_iterations = 10;
     utils::measure_time(tested_func, end_time, min_iterations);
 
     // ===RANDOMNESS CHECK===
