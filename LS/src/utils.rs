@@ -1,6 +1,12 @@
 #[allow(dead_code)]
 use rand::Rng;
 use std::time::Instant;
+use std::fs;
+use std::error::Error;
+
+const MAX_SIZE: usize = 64;
+pub static mut DISTANCES: [[i32; MAX_SIZE]; MAX_SIZE] = [[0; MAX_SIZE]; MAX_SIZE];
+pub static mut FLOWS: [[i32; MAX_SIZE]; MAX_SIZE] = [[0; MAX_SIZE]; MAX_SIZE];
 
 //Generating random permutations
 pub fn generate_permutations(arr: &mut [i32]) {
@@ -26,7 +32,7 @@ pub fn generate_unique_pairs(n: usize) -> (usize, usize){
 }
 
 //Measuring algorithm running time
-pub fn measure_time<F>(mut f: F, end_time: u128, min_iterations: u32)
+pub fn measure_time<F>(mut f: F, end_time_micros: u128, min_iterations: u32)
 where
     F: FnMut(),
 {
@@ -37,13 +43,16 @@ where
         counter+=1;
 
         if counter >= min_iterations {
-            let elapsed = start_time.elapsed().as_millis();
-            if elapsed >= end_time {
-                let avg_runtime_ns = elapsed as f64 / counter as f64;
+            let elapsed = start_time.elapsed();
+            if elapsed.as_micros() >= end_time_micros {
+                let total_nanos = elapsed.as_nanos() as f64;
+                let avg_ns = total_nanos / counter as f64;
                 
-                println!("Total Iterations: {counter}");
-                println!("Total Time: {} ms", elapsed);
-                println!("Avg Runtime per call: {:.2} ms", avg_runtime_ns);
+                println!("--- Time Results ---");
+                println!("Total Iterations: {}", counter);
+                println!("Total Time:       {} µs", elapsed.as_micros());
+                println!("Avg Runtime:      {:.2} µs", avg_ns / 1000.0);
+                println!("Avg Runtime:      {:.1} ns", avg_ns);
                 break;
             }
         }
@@ -56,10 +65,52 @@ where
 }
 
 //Loading instance data
-pub fn load_data() {}
+pub fn load_data(file_path: &str) -> Result<usize, Box<dyn Error>>{
+    let content: String = fs::read_to_string(file_path)?; //? means following if there is no error, returning it if there is
+    let mut tokens = content.split_whitespace();
+    let size: usize = tokens.next()
+                        .ok_or("File is empty")? 
+                        .parse::<usize>()?;
+    if size > MAX_SIZE{
+        return Err("Instance size exceeds MAX_SIZE buffer".into());
+    }
+
+    //update matrices
+    for i in 0..size{
+        for j in 0..size{
+            let val_str = tokens.next().ok_or("Error while updating DISTANCES")?;
+            unsafe {DISTANCES[i][j] = val_str.parse::<i32>()?};
+        }
+    }
+
+    for k in 0..size{
+        for l in 0..size{
+            let val_str = tokens.next().ok_or("Error while updating FLOWS")?;
+            unsafe {FLOWS[k][l] = val_str.parse::<i32>()?};
+        }
+    }
+
+    println!("Loading finished");
+    Ok(size)
+}
 
 //Heuristic
 pub fn heuristic() {}
 
 //2-OPT neighborhood
 pub fn neighborhood() {}
+
+pub fn test_symmetry(size: usize) -> bool {
+    unsafe {
+        // We only need to iterate through the upper triangle of the matrix.
+        for i in 0..size {
+            for j in (i + 1)..size {
+                if DISTANCES[i][j] != DISTANCES[j][i] || FLOWS[i][j] != FLOWS[j][i] {
+                    return false;
+                }
+            }
+        }
+    }
+    // If we've checked all pairs without returning, they are symmetric.
+    true
+}

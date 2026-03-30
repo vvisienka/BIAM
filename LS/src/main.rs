@@ -1,7 +1,10 @@
 // use std::collections::HashMap;
 mod utils;
+use std::fs;
+use std::error::Error;
+use rand::Rng;
 
-fn main() {
+fn main() -> Result<(), Box <dyn Error>>{
     let mut init_solution: [i32; 5]  = [1,2,3,4,5];
     println!("Unshuffled: {:?}", init_solution);
     println!("\n--- Testing Permutations ---");
@@ -35,4 +38,44 @@ fn main() {
     //         distribution.insert(init_solution, 1);
     // }}
     // println!("Distribution: {:?}", distribution);
+
+    // === LOAD DATA ===
+    let mut instances: [String; 10] = Default::default(); //intialized with empty strings
+    let mut solutions: [String; 10] = Default::default();
+    let mut instance_count = 0;
+    let mut solution_count = 0;
+
+    //1. Collect the file names
+    for entry in fs::read_dir("../data")?{
+        
+        let path = entry?.path();
+        if let Some(path_str) = path.to_str(){
+
+        if path_str.contains("_solution.dat"){
+            solutions[solution_count] = path_str.to_string();
+            solution_count += 1;
+        } else if path_str.contains(".dat"){
+            instances[instance_count] = path_str.to_string();
+            instance_count += 1;
+        }
+    }}
+
+    
+    //2. Load the actual data
+    for file in instances{
+        println!("\nLoading: {}", file);
+        let size = utils::load_data(&file)?;
+        // Test if matrices are symmetric
+        if utils::test_symmetry(size) {
+            println!("Validation: Matrices are symmetric.");
+        } else {
+            println!("Validation WARNING: Matrices are NOT symmetric.");
+        }
+        let mut rng = rand::thread_rng();
+        let x = rng.gen_range(0..size);
+        let y = rng.gen_range(0..size);
+        println!("Element DISTANCES[{x},{y}]: {}", unsafe{utils::DISTANCES[x][y]});
+        println!("Element FLOWS[{x},{y}]: {}", unsafe{utils::FLOWS[x][y]});
+    }
+    Ok(())
 }
