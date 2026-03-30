@@ -4,7 +4,7 @@ use std::time::Instant;
 use std::fs;
 use std::error::Error;
 
-const MAX_SIZE: usize = 64;
+pub const MAX_SIZE: usize = 64;
 pub static mut DISTANCES: [[i32; MAX_SIZE]; MAX_SIZE] = [[0; MAX_SIZE]; MAX_SIZE];
 pub static mut FLOWS: [[i32; MAX_SIZE]; MAX_SIZE] = [[0; MAX_SIZE]; MAX_SIZE];
 
@@ -94,13 +94,47 @@ pub fn load_data(file_path: &str) -> Result<usize, Box<dyn Error>>{
     Ok(size)
 }
 
-//Heuristic
-pub fn heuristic() {}
+//Heuristic - average value for each row and column, match the highest average (from B) with lowest average (from A)
+pub fn heuristic(size: usize, solution: &mut [i32]) {
+    let mut dist_potentials: [i32; MAX_SIZE] = [0; MAX_SIZE];
+    let mut flow_potentials: [i32; MAX_SIZE] = [0; MAX_SIZE];
+
+    for i in 0..size{
+        let mut dist_sum = 0;
+        let mut flow_sum = 0;
+        for j in 0..size{
+            unsafe{
+            dist_sum += DISTANCES[i][j];
+            flow_sum += FLOWS[i][j];
+            }
+        }
+        dist_potentials[i] = dist_sum;
+        flow_potentials[i] = flow_sum;
+    }
+
+    // Create arrays of indices: [0, 1, 2, ..., size-1] to sort them
+    let mut dist_indices: [usize; MAX_SIZE] = [0; MAX_SIZE];
+    let mut flow_indices: [usize; MAX_SIZE] = [0; MAX_SIZE];
+    for i in 0..size {
+        dist_indices[i] = i;
+        flow_indices[i] = i;
+    }
+
+    // Sort the indices based on the potential values - DIST ascending, FLOW descending
+    dist_indices[0..size].sort_unstable_by(|&a, &b| dist_potentials[a].cmp(&dist_potentials[b]));
+    flow_indices[0..size].sort_unstable_by(|&a, &b| flow_potentials[b].cmp(&flow_potentials[a]));
+
+    // Highest flow is assigned to the location with the lowest distance.
+    for i in 0..size {
+        solution[dist_indices[i]] = flow_indices[i] as i32;
+    }
+}
 
 //2-OPT neighborhood
-pub fn neighborhood() {}
+// pub fn neighborhood() {}
 
-pub fn test_symmetry(size: usize) -> bool {
+// pub fn test_symmetry(size: usize) -> bool {
+
     unsafe {
         // We only need to iterate through the upper triangle of the matrix.
         for i in 0..size {
@@ -114,3 +148,5 @@ pub fn test_symmetry(size: usize) -> bool {
     // If we've checked all pairs without returning, they are symmetric.
     true
 }
+
+// pub fn evaluate(){}

@@ -65,17 +65,18 @@ fn main() -> Result<(), Box <dyn Error>>{
     for file in instances{
         println!("\nLoading: {}", file);
         let size = utils::load_data(&file)?;
-        // Test if matrices are symmetric
-        if utils::test_symmetry(size) {
-            println!("Validation: Matrices are symmetric.");
-        } else {
-            println!("Validation WARNING: Matrices are NOT symmetric.");
-        }
-        let mut rng = rand::thread_rng();
-        let x = rng.gen_range(0..size);
-        let y = rng.gen_range(0..size);
-        println!("Element DISTANCES[{x},{y}]: {}", unsafe{utils::DISTANCES[x][y]});
-        println!("Element FLOWS[{x},{y}]: {}", unsafe{utils::FLOWS[x][y]});
+        // // Test if matrices are symmetric
+        // if utils::test_symmetry(size) {
+        //     println!("Validation: Matrices are symmetric.");
+        // } else {
+        //     println!("Validation WARNING: Matrices are NOT symmetric.");
+        // }
+
+        let mut heuristic_solution = [0i32; utils::MAX_SIZE]; //defult with 0s
+        print!("\nSolution before heuristic: {:?}", heuristic_solution);
+        utils::heuristic(size, &mut heuristic_solution[0..size]);
+        print!("\n\nSolution after heuristic: {:?}", heuristic_solution);
+        break;
     }
     Ok(())
 }
