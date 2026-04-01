@@ -5,8 +5,6 @@ use std::fs;
 use std::error::Error;
 
 pub const MAX_SIZE: usize = 64;
-pub static mut DISTANCES: [[i32; MAX_SIZE]; MAX_SIZE] = [[0; MAX_SIZE]; MAX_SIZE];
-pub static mut FLOWS: [[i32; MAX_SIZE]; MAX_SIZE] = [[0; MAX_SIZE]; MAX_SIZE];
 
 //Generating random permutations
 pub fn generate_permutations(arr: &mut [i32]) {
@@ -65,7 +63,11 @@ where
 }
 
 //Loading instance data
-pub fn load_data(file_path: &str) -> Result<usize, Box<dyn Error>>{
+pub fn load_data(
+    file_path: &str,
+    distances: &mut [[i32; MAX_SIZE]; MAX_SIZE],
+    flows: &mut [[i32; MAX_SIZE]; MAX_SIZE],
+) -> Result<usize, Box<dyn Error>> {
     let content: String = fs::read_to_string(file_path)?; //? means following if there is no error, returning it if there is
     let mut tokens = content.split_whitespace();
     let size: usize = tokens.next()
@@ -79,14 +81,14 @@ pub fn load_data(file_path: &str) -> Result<usize, Box<dyn Error>>{
     for i in 0..size{
         for j in 0..size{
             let val_str = tokens.next().ok_or("Error while updating DISTANCES")?;
-            unsafe {DISTANCES[i][j] = val_str.parse::<i32>()?};
+            distances[i][j] = val_str.parse::<i32>()?;
         }
     }
 
     for k in 0..size{
         for l in 0..size{
             let val_str = tokens.next().ok_or("Error while updating FLOWS")?;
-            unsafe {FLOWS[k][l] = val_str.parse::<i32>()?};
+            flows[k][l] = val_str.parse::<i32>()?;
         }
     }
 
@@ -95,7 +97,12 @@ pub fn load_data(file_path: &str) -> Result<usize, Box<dyn Error>>{
 }
 
 //Heuristic - average value for each row and column, match the highest average (from B) with lowest average (from A)
-pub fn heuristic(size: usize, solution: &mut [i32]) {
+pub fn heuristic(
+    size: usize,
+    solution: &mut [i32],
+    distances: &[[i32; MAX_SIZE]; MAX_SIZE],
+    flows: &[[i32; MAX_SIZE]; MAX_SIZE],
+) {
     let mut dist_potentials: [i32; MAX_SIZE] = [0; MAX_SIZE];
     let mut flow_potentials: [i32; MAX_SIZE] = [0; MAX_SIZE];
 
@@ -103,10 +110,8 @@ pub fn heuristic(size: usize, solution: &mut [i32]) {
         let mut dist_sum = 0;
         let mut flow_sum = 0;
         for j in 0..size{
-            unsafe{
-            dist_sum += DISTANCES[i][j];
-            flow_sum += FLOWS[i][j];
-            }
+            dist_sum += distances[i][j];
+            flow_sum += flows[i][j];
         }
         dist_potentials[i] = dist_sum;
         flow_potentials[i] = flow_sum;
@@ -133,15 +138,16 @@ pub fn heuristic(size: usize, solution: &mut [i32]) {
 //2-OPT neighborhood
 // pub fn neighborhood() {}
 
-// pub fn test_symmetry(size: usize) -> bool {
-
-    unsafe {
-        // We only need to iterate through the upper triangle of the matrix.
-        for i in 0..size {
-            for j in (i + 1)..size {
-                if DISTANCES[i][j] != DISTANCES[j][i] || FLOWS[i][j] != FLOWS[j][i] {
-                    return false;
-                }
+pub fn test_symmetry(
+    size: usize,
+    distances: &[[i32; MAX_SIZE]; MAX_SIZE],
+    flows: &[[i32; MAX_SIZE]; MAX_SIZE],
+) -> bool {
+    // We only need to iterate through the upper triangle of the matrix.
+    for i in 0..size {
+        for j in (i + 1)..size {
+            if distances[i][j] != distances[j][i] || flows[i][j] != flows[j][i] {
+                return false;
             }
         }
     }
@@ -150,3 +156,8 @@ pub fn heuristic(size: usize, solution: &mut [i32]) {
 }
 
 // pub fn evaluate(){}
+// pub fn random_search() {}
+// pub fn random_walk() {}
+// pub fn local_search() {}
+// pub fn steepest() {}
+// pub fn greedy(){}

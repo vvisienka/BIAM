@@ -61,22 +61,32 @@ fn main() -> Result<(), Box <dyn Error>>{
     }}
 
     
-    //2. Load the actual data
-    for file in instances{
-        println!("\nLoading: {}", file);
-        let size = utils::load_data(&file)?;
-        // // Test if matrices are symmetric
-        // if utils::test_symmetry(size) {
-        //     println!("Validation: Matrices are symmetric.");
-        // } else {
-        //     println!("Validation WARNING: Matrices are NOT symmetric.");
-        // }
+    //2. Create data structures and process instances
 
+    // Loop over the files we actually found
+    for i in 0..instance_count {
+        let mut distances: [[i32; utils::MAX_SIZE]; utils::MAX_SIZE] = [[0; utils::MAX_SIZE]; utils::MAX_SIZE];
+        let mut flows: [[i32; utils::MAX_SIZE]; utils::MAX_SIZE] = [[0; utils::MAX_SIZE]; utils::MAX_SIZE];
+        
+        let file_path = &instances[i];
+        // An empty file path means we've reached the end of the found files.
+        if file_path.is_empty() { break; }
+        
+        println!("\n--- Processing instance: {} ---", file_path);
+        let size = utils::load_data(file_path, &mut distances, &mut flows)?;
+        
+        // if utils::test_symmetry(size, &distances, &flows) { 
+        //     println!("Validation: Matrices are symmetric.") 
+        // } else {
+        //     println!("Validation: Matrices are not symmetric.")
+        // }
+        
         let mut heuristic_solution = [0i32; utils::MAX_SIZE]; //defult with 0s
         print!("\nSolution before heuristic: {:?}", heuristic_solution);
-        utils::heuristic(size, &mut heuristic_solution[0..size]);
+        utils::heuristic(size, &mut heuristic_solution[0..size], &distances, &flows);
         print!("\n\nSolution after heuristic: {:?}", heuristic_solution);
         break;
     }
+
     Ok(())
 }
