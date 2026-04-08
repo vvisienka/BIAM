@@ -1,8 +1,9 @@
-// use std::collections::HashMap;
 mod utils;
+mod search;
+
 use std::fs;
 use std::error::Error;
-use rand::Rng;
+// use rand::Rng;
 
 fn main() -> Result<(), Box <dyn Error>>{
     let mut init_solution: [i32; 5]  = [1,2,3,4,5];
@@ -65,6 +66,7 @@ fn main() -> Result<(), Box <dyn Error>>{
 
     // Loop over the files we actually found
     for i in 0..instance_count {
+        if i != 5 {continue};
         let mut distances: [[i32; utils::MAX_SIZE]; utils::MAX_SIZE] = [[0; utils::MAX_SIZE]; utils::MAX_SIZE];
         let mut flows: [[i32; utils::MAX_SIZE]; utils::MAX_SIZE] = [[0; utils::MAX_SIZE]; utils::MAX_SIZE];
         
@@ -82,9 +84,15 @@ fn main() -> Result<(), Box <dyn Error>>{
         // }
         
         let mut heuristic_solution = [0i32; utils::MAX_SIZE]; //defult with 0s
-        print!("\nSolution before heuristic: {:?}", heuristic_solution);
+        // print!("\nSolution before heuristic: {:?}", heuristic_solution);
         utils::heuristic(size, &mut heuristic_solution[0..size], &distances, &flows);
-        print!("\n\nSolution after heuristic: {:?}", heuristic_solution);
+        println!("\nHeuristic solution generated: {:?}", &heuristic_solution[0..size]);
+
+        let cost = utils::evaluate(size, &heuristic_solution[0..size], &distances, &flows);
+        println!("Heuristic solution cost: {}", cost);
+        println!("\n============ Test eval with optimal solution ============");
+        let test_cost = utils::evaluate(size, &[12,7,9,3,4,8,11,1,5,6,10,2], &distances, &flows);
+        println!("Heuristic solution cost: {}", test_cost);
         break;
     }
 

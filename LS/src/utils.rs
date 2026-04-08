@@ -81,14 +81,14 @@ pub fn load_data(
     for i in 0..size{
         for j in 0..size{
             let val_str = tokens.next().ok_or("Error while updating DISTANCES")?;
-            distances[i][j] = val_str.parse::<i32>()?;
+            flows[i][j] = val_str.parse::<i32>()?;
         }
     }
 
     for k in 0..size{
         for l in 0..size{
             let val_str = tokens.next().ok_or("Error while updating FLOWS")?;
-            flows[k][l] = val_str.parse::<i32>()?;
+            distances[k][l] = val_str.parse::<i32>()?;
         }
     }
 
@@ -131,11 +131,26 @@ pub fn heuristic(
 
     // Highest flow is assigned to the location with the lowest distance.
     for i in 0..size {
-        solution[dist_indices[i]] = flow_indices[i] as i32;
+        solution[dist_indices[i]] = (flow_indices[i]+1) as i32;
     }
 }
 
-//2-OPT neighborhood
+//Calculate delta
+pub fn calculate_delta(size: usize, solution: &[i32], distances: &[[i32; MAX_SIZE]; MAX_SIZE], flows: &[[i32; MAX_SIZE]; MAX_SIZE], a: usize, b: usize) -> i64 {
+    let mut delta: i64 = 0;
+    let loc_a = (solution[a]-1) as usize;
+    let loc_b = (solution[b]-1) as usize;
+    for k in 0..size {
+        if k != a && k != b {
+            let loc_k = (solution[k]-1) as usize;
+            let flow_diff = flows[a][k] - flows[b][k];
+            let dist_diff = distances[loc_b][loc_k] - distances[loc_a][loc_k];
+            delta += (flow_diff as i64) * (dist_diff as i64);
+        }
+    }
+    delta*2
+}
+//Get neighbourhood
 // pub fn neighborhood() {}
 
 pub fn test_symmetry(
@@ -155,9 +170,20 @@ pub fn test_symmetry(
     true
 }
 
-// pub fn evaluate(){}
-// pub fn random_search() {}
-// pub fn random_walk() {}
-// pub fn local_search() {}
-// pub fn steepest() {}
-// pub fn greedy(){}
+pub fn evaluate(
+    size: usize,
+    solution: &[i32],
+    distances: &[[i32; MAX_SIZE]; MAX_SIZE],
+    flows: &[[i32; MAX_SIZE]; MAX_SIZE],
+) -> i64 {
+    let mut total_cost: i64 = 0;
+    for i in 0..size {
+        for j in i+1..size {
+            let location_i = (solution[i]-1) as usize;
+            let location_j = (solution[j]-1) as usize;
+            total_cost += (distances[location_i][location_j] as i64) * (flows[i][j] as i64);
+
+        }
+    }
+    total_cost*2 //to get the full cost
+}
