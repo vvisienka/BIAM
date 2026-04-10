@@ -9,6 +9,45 @@ pub struct RunResult {
     pub time_micros: u128,
 }
 
+//Heuristic - average value for each row and column, match the highest average (from B) with lowest average (from A)
+pub fn heuristic(
+    size: usize,
+    solution: &mut [i32],
+    distances: &[[i32; utils::MAX_SIZE]; utils::MAX_SIZE],
+    flows: &[[i32; utils::MAX_SIZE]; utils::MAX_SIZE],
+) {
+    let mut dist_potentials: [i32; utils::MAX_SIZE] = [0; utils::MAX_SIZE];
+    let mut flow_potentials: [i32; utils::MAX_SIZE] = [0; utils::MAX_SIZE];
+
+    for i in 0..size{
+        let mut dist_sum = 0;
+        let mut flow_sum = 0;
+        for j in 0..size{
+            dist_sum += distances[i][j];
+            flow_sum += flows[i][j];
+        }
+        dist_potentials[i] = dist_sum;
+        flow_potentials[i] = flow_sum;
+    }
+
+    // Create arrays of indices: [0, 1, 2, ..., size-1] to sort them
+    let mut dist_indices: [usize; utils::MAX_SIZE] = [0; utils::MAX_SIZE];
+    let mut flow_indices: [usize; utils::MAX_SIZE] = [0; utils::MAX_SIZE];
+    for i in 0..size {
+        dist_indices[i] = i;
+        flow_indices[i] = i;
+    }
+
+    // Sort the indices based on the potential values - DIST ascending, FLOW descending
+    dist_indices[0..size].sort_unstable_by(|&a, &b| dist_potentials[a].cmp(&dist_potentials[b]));
+    flow_indices[0..size].sort_unstable_by(|&a, &b| flow_potentials[b].cmp(&flow_potentials[a]));
+
+    // Highest flow is assigned to the location with the lowest distance.
+    for i in 0..size {
+        solution[dist_indices[i]] = (flow_indices[i]+1) as i32;
+    }
+}
+
 pub fn local_search(size: usize, 
     mut current_solution: [i32; 64],
     mut current_cost: i64,

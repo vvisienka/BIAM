@@ -96,45 +96,6 @@ pub fn load_data(
     Ok(size)
 }
 
-//Heuristic - average value for each row and column, match the highest average (from B) with lowest average (from A)
-pub fn heuristic(
-    size: usize,
-    solution: &mut [i32],
-    distances: &[[i32; MAX_SIZE]; MAX_SIZE],
-    flows: &[[i32; MAX_SIZE]; MAX_SIZE],
-) {
-    let mut dist_potentials: [i32; MAX_SIZE] = [0; MAX_SIZE];
-    let mut flow_potentials: [i32; MAX_SIZE] = [0; MAX_SIZE];
-
-    for i in 0..size{
-        let mut dist_sum = 0;
-        let mut flow_sum = 0;
-        for j in 0..size{
-            dist_sum += distances[i][j];
-            flow_sum += flows[i][j];
-        }
-        dist_potentials[i] = dist_sum;
-        flow_potentials[i] = flow_sum;
-    }
-
-    // Create arrays of indices: [0, 1, 2, ..., size-1] to sort them
-    let mut dist_indices: [usize; MAX_SIZE] = [0; MAX_SIZE];
-    let mut flow_indices: [usize; MAX_SIZE] = [0; MAX_SIZE];
-    for i in 0..size {
-        dist_indices[i] = i;
-        flow_indices[i] = i;
-    }
-
-    // Sort the indices based on the potential values - DIST ascending, FLOW descending
-    dist_indices[0..size].sort_unstable_by(|&a, &b| dist_potentials[a].cmp(&dist_potentials[b]));
-    flow_indices[0..size].sort_unstable_by(|&a, &b| flow_potentials[b].cmp(&flow_potentials[a]));
-
-    // Highest flow is assigned to the location with the lowest distance.
-    for i in 0..size {
-        solution[dist_indices[i]] = (flow_indices[i]+1) as i32;
-    }
-}
-
 //Calculate delta
 pub fn calculate_delta(size: usize, solution: &[i32], distances: &[[i32; MAX_SIZE]; MAX_SIZE], flows: &[[i32; MAX_SIZE]; MAX_SIZE], a: usize, b: usize) -> i64 {
     let mut delta: i64 = 0;
@@ -150,8 +111,6 @@ pub fn calculate_delta(size: usize, solution: &[i32], distances: &[[i32; MAX_SIZ
     }
     delta*2
 }
-//Get neighbourhood
-// pub fn neighborhood() {}
 
 pub fn test_symmetry(
     size: usize,
@@ -186,4 +145,18 @@ pub fn evaluate(
         }
     }
     total_cost*2 //to get the full cost
+}
+
+pub fn get_optimal_cost(file_path: &str) -> i64 {
+    // Zamieniamy .dat na _solution.dat
+    let sol_path = file_path.replace(".dat", "_solution.dat");
+    if let Ok(content) = fs::read_to_string(&sol_path) {
+        let mut tokens = content.split_whitespace();
+        tokens.next(); // Pomijamy pierwszą liczbę (rozmiar N)
+        if let Some(opt_str) = tokens.next() {
+            return opt_str.parse::<i64>().unwrap_or(0);
+        }
+    }
+    // Jeśli nie ma pliku lub jest błąd, zwracamy 0
+    0 
 }
