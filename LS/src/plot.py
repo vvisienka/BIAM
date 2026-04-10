@@ -93,7 +93,7 @@ def main():
     axes[-1].legend(loc='lower right', title="")
 
     plt.tight_layout()
-    plt.savefig("plot_1_quality_trends.png", dpi=300, bbox_inches='tight')
+    plt.savefig("../plots/plot_1_quality_trends.png", dpi=300, bbox_inches='tight')
     plt.close()
     print("✅ PLOT 1: Generated (Quality comparison)")
 
@@ -136,7 +136,7 @@ def main():
     plt.legend(title="", bbox_to_anchor=(1.01, 1), loc='upper left', fontsize=12)
     
     plt.tight_layout()
-    plt.savefig("plot_2_performance_comparison.png", dpi=300)
+    plt.savefig("../plots/plot_2_performance_comparison.png", dpi=300)
     plt.close()
     print("✅ PLOT 2: Generated (Average Performance Pointplot)")
 
@@ -167,7 +167,7 @@ def main():
     plt.legend(title="", bbox_to_anchor=(1.01, 1), loc='upper left', fontsize=12)
     
     plt.tight_layout()
-    plt.savefig("plot_3_running_time.png", dpi=300)
+    plt.savefig("../plots/plot_3_running_time.png", dpi=300)
     plt.close()
     print("✅ PLOT 3: Generated (Average Running Time)")
 
@@ -209,7 +209,7 @@ def main():
     plt.legend(title="", bbox_to_anchor=(1.01, 1), loc='upper left', fontsize=12)
     
     plt.tight_layout()
-    plt.savefig("plot_4_efficiency.png", dpi=300)
+    plt.savefig("../plots/plot_4_efficiency.png", dpi=300)
     plt.close()
     print("✅ PLOT 4: Generated (Efficiency - Pointplot)")
 
@@ -251,7 +251,7 @@ def main():
     plt.legend(title="", bbox_to_anchor=(1.01, 1), loc='upper left', fontsize=12)
     
     plt.tight_layout()
-    plt.savefig("plot_5_algorithm_steps.png", dpi=300)
+    plt.savefig("../plots/plot_5_algorithm_steps.png", dpi=300)
     plt.close()
     print("✅ PLOT 5: Generated (Algorithm Steps - G vs S)")
 
@@ -297,7 +297,7 @@ def main():
     plt.legend(title="", bbox_to_anchor=(1.01, 1), loc='upper left', fontsize=12)
     
     plt.tight_layout()
-    plt.savefig("plot_6_evaluations.png", dpi=300)
+    plt.savefig("../plots/plot_6_evaluations.png", dpi=300)
     plt.close()
     print("✅ PLOT 6: Generated (Evaluations - RS, RW, G, S)")
     
