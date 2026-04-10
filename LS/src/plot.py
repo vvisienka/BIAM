@@ -99,7 +99,7 @@ def main():
 
     # ==========================================
     # PLOT 2: COMPREHENSIVE PERFORMANCE COMPARISON
-    # Comparing average Quality Gap of all algorithms on each instance
+    # Comparing average Quality of all algorithms on each instance
     # ==========================================
     performance_agg = df.groupby(['Algorithm', 'Instance', 'Size']).agg(
         AverageQuality=('Quality', 'mean')
@@ -129,10 +129,6 @@ def main():
     plt.ylabel("Average Algorithm Quality", fontsize=14)
     plt.xlabel("Instance", fontsize=14)
     
-    # Using a logarithmic scale on Y axis can be very helpful here because
-    # Random Search might have a gap of 2.0 (200%), while Steepest might have 0.05 (5%).
-    # If the lines look too squashed at the bottom, uncomment the line below:
-    # plt.yscale('log')
 
     plt.xticks(rotation=45, fontsize=12)
     
@@ -155,18 +151,16 @@ def main():
         x='Instance', 
         y='TimeMicros', 
         hue='Algorithm',
-        hue_order=algorithms,    # Zachowuje kolejność RS, RW, H, G, S
-        order=ordered_instances, # Posortowane rosnąco według N
+        hue_order=algorithms,    # Keep the order
+        order=ordered_instances, # Sorted instances
         palette=palette,
-        errorbar='sd',           # Rysuje odchylenie standardowe (Standard Deviation)
-        capsize=0.1              # Dodaje poziome kreski na końcach wąsów błędu
+        errorbar='sd',           # tandard Deviation
+        capsize=0.1              # Add caps to error bars
     )
     
     plt.title("Average Algorithm Running Time With Standard Deviation", fontsize=18, fontweight='bold')
     plt.ylabel("Algorithm Running Time [μs]", fontsize=14)
     plt.xlabel("Instance", fontsize=14)
-    
-    # Skala logarytmiczna - kluczowa dla czasów wykonania algorytmów
     plt.yscale('log')
     
     plt.xticks(rotation=45, fontsize=12)
@@ -207,7 +201,7 @@ def main():
         markersize=8
     )
     
-    plt.title("Algorithm Efficiency Comparison]", fontsize=18, fontweight='bold')
+    plt.title("Algorithm Efficiency Comparison", fontsize=18, fontweight='bold')
     plt.ylabel("Algorithm Efficiency", fontsize=14)
     plt.xlabel("Instance", fontsize=14)
     
@@ -219,6 +213,93 @@ def main():
     plt.close()
     print("✅ PLOT 4: Generated (Efficiency - Pointplot)")
 
+    # ==========================================
+    # PLOT 5: AVERAGE NUMBER OF STEPS (G vs S)
+    # Comparing how many times the solution was changed
+    # ==========================================
+    
+    # Filter data to only include Greedy and Steepest
+    df_gs = df[df['Algorithm'].isin(['G', 'S'])]
+    
+    # Hardcode the Set1 palette colors to maintain consistency
+    gs_palette = {'G': '#984ea3', 'S': '#ff7f00'}
+
+    plt.figure(figsize=(16, 8))
+    
+    # Using pointplot to show the trend as instance size grows
+    sns.pointplot(
+        data=df_gs, 
+        x='Instance', 
+        y='Steps', 
+        hue='Algorithm',
+        hue_order=['G', 'S'],         # Only G and S in the legend
+        order=ordered_instances,      # Keep the N-size sorting
+        palette=gs_palette,           # Enforce consistent colors
+        errorbar='sd',           
+        capsize=0.1,
+        markers=['v', '^'],           # Down-triangle for G, Up-triangle for S
+        linestyle='-',
+        linewidth=2,
+        markersize=9
+    )
+    
+    plt.title("Algorithm Steps: Greedy vs. Steepest", fontsize=18, fontweight='bold')
+    plt.ylabel("Average Number of Steps", fontsize=14)
+    plt.xlabel("Instance", fontsize=14)
+    
+    plt.xticks(rotation=45, fontsize=12)
+    plt.legend(title="", bbox_to_anchor=(1.01, 1), loc='upper left', fontsize=12)
+    
+    plt.tight_layout()
+    plt.savefig("plot_5_algorithm_steps.png", dpi=300)
+    plt.close()
+    print("✅ PLOT 5: Generated (Algorithm Steps - G vs S)")
+
+    # ==========================================
+    # PLOT 6: AVERAGE NUMBER OF EVALUATIONS (RS, RW, G, S)
+    # Comparing how many solutions were visited/evaluated
+    # ==========================================
+    
+    # 1. Exclude Heuristic (H) since we are only interested in search algorithms
+    algorithms_eval = ['RS', 'RW', 'G', 'S']
+    df_evals = df[df['Algorithm'].isin(algorithms_eval)]
+    
+    # 2. Hardcode colors and markers to maintain consistency with previous plots
+    eval_palette = {'RS': '#e41a1c', 'RW': '#377eb8', 'G': '#984ea3', 'S': '#ff7f00'}
+    eval_markers = ['o', 's', 'v', '^'] 
+
+    plt.figure(figsize=(16, 8))
+    
+    sns.pointplot(
+        data=df_evals, 
+        x='Instance', 
+        y='Evaluations', 
+        hue='Algorithm',
+        hue_order=algorithms_eval,
+        order=ordered_instances,
+        palette=eval_palette,
+        errorbar='sd',           
+        capsize=0.1,
+        markers=eval_markers,
+        linestyle='-',
+        linewidth=2,
+        markersize=9
+    )
+    
+    plt.title("Algorithm Evaluations: Number of Solutions Visited", fontsize=18, fontweight='bold')
+    plt.ylabel("Average Number of Evaluations", fontsize=14)
+    plt.xlabel("Instance", fontsize=14)
+    
+    # Logarithmic scale - necessary because RS/RW can have millions of evaluations, while G only has hundreds
+    plt.yscale('log')
+    
+    plt.xticks(rotation=45, fontsize=12)
+    plt.legend(title="", bbox_to_anchor=(1.01, 1), loc='upper left', fontsize=12)
+    
+    plt.tight_layout()
+    plt.savefig("plot_6_evaluations.png", dpi=300)
+    plt.close()
+    print("✅ PLOT 6: Generated (Evaluations - RS, RW, G, S)")
     
 if __name__ == "__main__":
     main()
