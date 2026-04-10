@@ -4,7 +4,6 @@ mod search;
 use std::fs;
 use std::error::Error;
 use std::io::Write;
-use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("=== Multi Start Local Search for QAP");

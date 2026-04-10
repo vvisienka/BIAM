@@ -40,8 +40,8 @@ def main():
     df['OptCost'] = df['OptCost'].replace(0, np.nan)
 
     # 1. QUALITY METRIC
-    # Quality Gap: (f_A - f_OPT) / f_OPT (Lower is better)
-    df['Quality_Gap'] = (df['BestCost'] - df['OptCost']) / df['OptCost']
+    # Quality: f_OPT/f_Best (Higher is better)
+    df['Quality'] = df['OptCost']/df['BestCost']
 
     # Sort instances by extracted size N, then by name
     df['Size'] = df['Instance'].apply(extract_size)
@@ -56,9 +56,9 @@ def main():
     # PLOT 1: QUALITY TRENDS (Min, Mean, Max)
     # ==========================================
     agg_q = df.groupby(['Algorithm', 'Instance', 'Size']).agg(
-        Gap_Min=('Quality_Gap', 'min'),
-        Gap_Mean=('Quality_Gap', 'mean'),
-        Gap_Max=('Quality_Gap', 'max')
+        Quality_Min=('Quality', 'min'),
+        Quality_Mean=('Quality', 'mean'),
+        Quality_Max=('Quality', 'max')
     ).reset_index()
 
     agg_q = agg_q.sort_values(by=['Size', 'Instance'])
@@ -70,14 +70,14 @@ def main():
     for ax, alg in zip(axes, algorithms):
         subset = agg_q[agg_q['Algorithm'] == alg]
 
-        # MAX (Worst case)
-        ax.plot(subset['Instance'], subset['Gap_Max'], marker='^', color='#e41a1c', 
+        # MAX (Worst case) - min quality
+        ax.plot(subset['Instance'], subset['Quality_Min'], marker='^', color='#e41a1c', 
                 linestyle='--', linewidth=2, markersize=8, label='Max')
         # AVERAGE
-        ax.plot(subset['Instance'], subset['Gap_Mean'], marker='o', color='#377eb8', 
+        ax.plot(subset['Instance'], subset['Quality_Mean'], marker='o', color='#377eb8', 
                 linestyle='-', linewidth=2.5, markersize=8, label='Average')
-        # MIN (Best case)
-        ax.plot(subset['Instance'], subset['Gap_Min'], marker='v', color='#4daf4a', 
+        # MIN (Best case) - max quality
+        ax.plot(subset['Instance'], subset['Quality_Max'], marker='v', color='#4daf4a', 
                 linestyle='--', linewidth=2, markersize=8, label='Min')
 
         ax.set_title(f"{alg}", fontweight='bold', fontsize=14)
@@ -88,9 +88,9 @@ def main():
         ax.set_xlabel("Instance", fontsize=14)
         ax.grid(True, linestyle='--', alpha=0.6)
 
-    axes[0].set_ylabel("Quality Gap", fontsize=14)
-    plt.suptitle("Quality Comparison", fontsize=18, fontweight='bold', y=1.05)
-    axes[-1].legend(loc='upper right', title="")
+    axes[0].set_ylabel("Algorithm Quality", fontsize=14)
+    plt.suptitle("Algorithm Quality Comparison", fontsize=18, fontweight='bold', y=1.05)
+    axes[-1].legend(loc='lower right', title="")
 
     plt.tight_layout()
     plt.savefig("plot_1_quality_trends.png", dpi=300, bbox_inches='tight')
@@ -102,7 +102,7 @@ def main():
     # Comparing average Quality Gap of all algorithms on each instance
     # ==========================================
     performance_agg = df.groupby(['Algorithm', 'Instance', 'Size']).agg(
-        AverageGap=('Quality_Gap', 'mean')
+        AverageQuality=('Quality', 'mean')
     ).reset_index()
 
     # Sort the aggregated data just to be safe
@@ -114,7 +114,7 @@ def main():
     sns.pointplot(
         data=performance_agg, 
         x='Instance', 
-        y='AverageGap', 
+        y='AverageQuality', 
         hue='Algorithm',
         hue_order=algorithms,         # Forces legend order (RS, RW, H, G, S)
         order=ordered_instances,      # FORCES X-AXIS SORTING BY N SIZE
@@ -125,8 +125,8 @@ def main():
         markersize=8
     )
     
-    plt.title("Average Quality Comparison", fontsize=18, fontweight='bold')
-    plt.ylabel("Average Quality Gap", fontsize=14)
+    plt.title("Average Algorithm Quality Comparison", fontsize=18, fontweight='bold')
+    plt.ylabel("Average Algorithm Quality", fontsize=14)
     plt.xlabel("Instance", fontsize=14)
     
     # Using a logarithmic scale on Y axis can be very helpful here because
@@ -162,8 +162,8 @@ def main():
         capsize=0.1              # Dodaje poziome kreski na końcach wąsów błędu
     )
     
-    plt.title("Average Running Time With Standard Deviation", fontsize=18, fontweight='bold')
-    plt.ylabel("Time [μs]", fontsize=14)
+    plt.title("Average Algorithm Running Time With Standard Deviation", fontsize=18, fontweight='bold')
+    plt.ylabel("Algorithm Running Time [μs]", fontsize=14)
     plt.xlabel("Instance", fontsize=14)
     
     # Skala logarytmiczna - kluczowa dla czasów wykonania algorytmów
@@ -176,6 +176,48 @@ def main():
     plt.savefig("plot_3_running_time.png", dpi=300)
     plt.close()
     print("✅ PLOT 3: Generated (Average Running Time)")
+
+    # ==========================================
+    # PLOT 4: EFFICIENCY (Raw Ratio Version)
+    # Efficiency = Quality_Ratio / ln(TimeMicros+1)
+    # Higher is better
+    # ==========================================
+
+    
+    # Efficiency: Ratio divided by Time (with epsilon=1 to prevent div by zero)
+    df['Efficiency'] = df['Quality'] / np.log(df['TimeMicros']+1)
+
+    plt.figure(figsize=(16, 8))
+    # plt.yscale('log')
+    
+    # Using pointplot to show the trend of efficiency across instance sizes
+    sns.pointplot(
+        data=df, 
+        x='Instance', 
+        y='Efficiency', 
+        hue='Algorithm',
+        hue_order=algorithms,    
+        order=ordered_instances, 
+        palette=palette,
+        errorbar='sd',           
+        capsize=0.1,
+        markers=['o', 's', 'D', 'v', '^'], 
+        linestyle='-',
+        linewidth=2,
+        markersize=8
+    )
+    
+    plt.title("Algorithm Efficiency Comparison]", fontsize=18, fontweight='bold')
+    plt.ylabel("Algorithm Efficiency", fontsize=14)
+    plt.xlabel("Instance", fontsize=14)
+    
+    plt.xticks(rotation=45, fontsize=12)
+    plt.legend(title="", bbox_to_anchor=(1.01, 1), loc='upper left', fontsize=12)
+    
+    plt.tight_layout()
+    plt.savefig("plot_4_efficiency.png", dpi=300)
+    plt.close()
+    print("✅ PLOT 4: Generated (Efficiency - Pointplot)")
 
     
 if __name__ == "__main__":
