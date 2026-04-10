@@ -1,9 +1,10 @@
 use crate::utils;
+use rand::Rng;
 // use std::time::Instant;
 
 pub struct RunResult {
     pub best_cost: i64,
-    pub best_solution: [i32; utils::MAX_SIZE],
+    pub best_solution: [i32; crate::utils::MAX_SIZE],
     pub steps: u64,
     pub evaluations: u64,
     pub time_micros: u128,
@@ -42,6 +43,14 @@ pub fn heuristic(
     dist_indices[0..size].sort_unstable_by(|&a, &b| dist_potentials[a].cmp(&dist_potentials[b]));
     flow_indices[0..size].sort_unstable_by(|&a, &b| flow_potentials[b].cmp(&flow_potentials[a]));
 
+    //Randomness
+    let mut rng = rand::thread_rng();
+    for i in 0..size - 1 {
+        if rng.gen_bool(0.20) { 
+            flow_indices.swap(i, i + 1);
+        }
+    }
+
     // Highest flow is assigned to the location with the lowest distance.
     for i in 0..size {
         solution[dist_indices[i]] = (flow_indices[i]+1) as i32;
@@ -49,7 +58,7 @@ pub fn heuristic(
 }
 
 pub fn local_search(size: usize, 
-    mut current_solution: [i32; 64],
+    current_solution: &mut [i32],
     mut current_cost: i64,
     distances: &[[i32; 64]; 64],
     flows: &[[i32; 64]; 64],
@@ -58,16 +67,26 @@ pub fn local_search(size: usize,
         let mut steps: u64 = 0;
         let mut evaluations: u64 = 0;
         let mut improvement = true;
+        let mut rng = rand::thread_rng();
 
         while improvement {
             improvement = false;
-            //add randomization for greedy search
 
             let mut best_delta: i64 = 0;
             let mut best_pair: Option<(usize, usize)> = None;
+            
+            //greedy randomnization
+            let start_i = if is_greedy { rng.gen_range(0..size - 1) } else { 0 };
 
-            'outer: for i in 0..size-1 {
-                for j in i+1..size {
+            'outer: for step_i in 0..size-1 {
+                let i = (start_i + step_i) % (size - 1);
+                let num_j = size - 1 - i;
+                let start_j_offset = if is_greedy && num_j > 1 { rng.gen_range(0..num_j) } else { 0 };
+
+                for step_j in 0..num_j {
+                    let j_offset = (start_j_offset + step_j) % num_j;
+                    let j = (i + 1) + j_offset;
+
                     evaluations += 1;
                     let delta = utils::calculate_delta(size, &current_solution, distances, flows, i, j);
                     if delta < 0 {
@@ -94,11 +113,13 @@ pub fn local_search(size: usize,
                     improvement = true;
                 }
             }
-
         }
+        let mut best_solution_copy = [0i32; crate::utils::MAX_SIZE];
+        best_solution_copy[..size].copy_from_slice(&current_solution[..size]);
+
         RunResult {
             best_cost: current_cost,
-                best_solution: current_solution,
+            best_solution: best_solution_copy,
             steps,
             evaluations,
             time_micros: start_time.elapsed().as_micros(),
@@ -107,31 +128,29 @@ pub fn local_search(size: usize,
 
 pub fn random_search(
     size: usize,
+    current_solution: &mut [i32],
+    current_cost: i64,
     time_limit_micros: u128,
     distances: &[[i32; utils::MAX_SIZE]; utils::MAX_SIZE],
     flows: &[[i32; utils::MAX_SIZE]; utils::MAX_SIZE],
 ) -> RunResult {
     let start_time = std::time::Instant::now();
-    let mut best_cost = i64::MAX;
-    let mut best_solution = [0i32; utils::MAX_SIZE];
+    let mut best_cost = current_cost;
     let mut evaluations: u64 = 0;
     let mut steps: u64 = 0;
 
-    //1-based
-    let mut current_solution = [0i32; utils::MAX_SIZE];
-    for i in 0..size {
-        current_solution[i] = (i + 1) as i32;
-    }
+    let mut best_solution = [0i32; crate::utils::MAX_SIZE];
+    best_solution[..size].copy_from_slice(&current_solution[..size]);
 
     //Time limit
     while start_time.elapsed().as_micros() < time_limit_micros {
-        utils::generate_permutations(&mut current_solution[0..size]);
-        let cost = utils::evaluate(size, &current_solution, distances, flows);
+        utils::generate_permutations(current_solution);
+        let cost = utils::evaluate(size, current_solution, distances, flows);
         evaluations += 1;
 
         if cost < best_cost {
             best_cost = cost;
-            best_solution = current_solution;
+            best_solution[..size].copy_from_slice(&current_solution[..size]);
             steps += 1;
         }
     }
@@ -147,7 +166,7 @@ pub fn random_search(
 
 pub fn random_walk(
     size: usize,
-    mut current_solution: [i32; utils::MAX_SIZE],
+    current_solution: &mut [i32],
     mut current_cost: i64,
     time_limit_micros: u128,
     distances: &[[i32; utils::MAX_SIZE]; utils::MAX_SIZE],
@@ -155,15 +174,17 @@ pub fn random_walk(
 ) -> RunResult {
     let start_time = std::time::Instant::now();
     let mut best_cost = current_cost;
-    let mut best_solution = current_solution;
     let mut evaluations: u64 = 0;
     let mut steps: u64 = 0;
+
+    let mut best_solution = [0i32; crate::utils::MAX_SIZE];
+    best_solution[..size].copy_from_slice(&current_solution[..size]);
 
     //Time limit
     while start_time.elapsed().as_micros() < time_limit_micros {
         let (i, j) = utils::generate_unique_pairs(size);
         
-        let delta = utils::calculate_delta(size, &current_solution, distances, flows, i, j);
+        let delta = utils::calculate_delta(size, current_solution, distances, flows, i, j);
         evaluations += 1;
 
         current_solution.swap(i, j);
@@ -172,7 +193,7 @@ pub fn random_walk(
 
         if current_cost < best_cost {
             best_cost = current_cost;
-            best_solution = current_solution;
+            best_solution[..size].copy_from_slice(&current_solution[..size]);
         }
     }
 
