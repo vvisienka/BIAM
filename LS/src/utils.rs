@@ -157,6 +157,6 @@ pub fn get_optimal_cost(file_path: &str) -> i64 {
             return opt_str.parse::<i64>().unwrap_or(0);
         }
     }
-    // Jeśli nie ma pliku lub jest błąd, zwracamy 0
+    //If no file - return 0
     0 
 }
