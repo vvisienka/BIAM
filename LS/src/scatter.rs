@@ -4,23 +4,22 @@ mod search;
 use std::fs;
 use std::error::Error;
 use std::io::Write;
-use std::process::Command;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("=== Analiza struktury przestrzeni poszukiwań (450 powtórzeń x 5 algorytmów) ===");
 
     let target_instances = [
-        "els19.dat", "chr20c.dat"];
+        "els19.dat", "chr20c.dat", "chr20a.dat", "esc32a.dat"];
     let runs = 450; 
 
     // Plik ląduje poziom wyżej, żeby Python miał do niego łatwy dostęp
-    let mut csv_file = fs::File::create("../scatter_data.csv")?;
+    let mut csv_file = fs::File::create("scatter_data.csv")?;
     
     // Dodajemy kolumnę "Solution" na samym końcu, żeby móc liczyć Similarity!
     writeln!(csv_file, "Instance, OptCost, Algorithm, Run, InitCost, FinalCost, Solution")?;
 
     for instance_file in target_instances.iter() {
-        let file_path = format!("../../data/{}", instance_file);
+        let file_path = format!("../data/{}", instance_file);
         let instance_name = instance_file.replace(".dat", "");
         
         let mut distances: [[i32; utils::MAX_SIZE]; utils::MAX_SIZE] = [[0; utils::MAX_SIZE]; utils::MAX_SIZE];
