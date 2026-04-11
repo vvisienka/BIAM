@@ -47,12 +47,11 @@ def main():
                 alpha=0.6      # Przezroczystość
             )
 
-            ax.set_title(f"{alg} (ρ = {rho:.3f})", fontweight='bold', fontsize=14)
-            ax.set_xlabel("Initial Quality", fontsize=12)
+            ax.set_title(f"{alg} (ρ = {rho:.3f})", fontsize=24, fontweight='bold', pad=10)
+            ax.set_xlabel("Initial Quality", fontsize=20, fontweight='bold', labelpad=25)
             if ax == axes[0]:
-                ax.set_ylabel("Final Quality", fontsize=12)
-
-        plt.suptitle(f"Search Space Structure: {instance}", fontsize=16, fontweight='bold')
+                ax.set_ylabel("Final Quality", fontsize=20, fontweight='bold', labelpad=25)
+        # plt.suptitle(f"Search Space Structure: {instance}", fontsize=16, fontweight='bold')
         plt.tight_layout()
         plt.savefig(f"../plots/plot_7_scatter_{instance}.png", dpi=300)
         plt.close()
