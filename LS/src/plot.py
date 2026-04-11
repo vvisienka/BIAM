@@ -70,13 +70,13 @@ def main():
         ax = axes_flat[target_idx]
         subset = agg_q[agg_q['Algorithm'] == alg]
 
-        # Zwiększone markersize=12
-        ax.plot(subset['Instance'], subset['Quality_Min'], marker='^', color='#e41a1c', 
-                linestyle='--', linewidth=2, markersize=12, label='Min')
+        ax.plot(subset['Instance'], subset['Quality_Max'], marker='^', color='#4daf4a', 
+                linestyle='--', linewidth=2, markersize=12, label='Max')
         ax.plot(subset['Instance'], subset['Quality_Mean'], marker='o', color='#377eb8', 
                 linestyle='-', linewidth=3, markersize=12, label='Average')
-        ax.plot(subset['Instance'], subset['Quality_Max'], marker='v', color='#4daf4a', 
-                linestyle='--', linewidth=2, markersize=12, label='Max')
+        ax.plot(subset['Instance'], subset['Quality_Min'], marker='v', color='#e41a1c', 
+                linestyle='--', linewidth=2, markersize=12, label='Min')
+        
 
         ax.set_title(f"{alg}", fontweight='bold', fontsize=22, pad=20)
         ax.set_xticks(range(len(ordered_instances)))
