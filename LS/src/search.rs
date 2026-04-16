@@ -4,7 +4,7 @@ use rand::Rng;
 
 pub struct RunResult {
     pub best_cost: i64,
-    pub best_solution: [i32; crate::utils::MAX_SIZE],
+    pub best_solution: [i32; utils::MAX_SIZE],
     pub steps: u64,
     pub evaluations: u64,
     pub time_micros: u128,
@@ -60,8 +60,8 @@ pub fn heuristic(
 pub fn local_search(size: usize, 
     current_solution: &mut [i32],
     mut current_cost: i64,
-    distances: &[[i32; 64]; 64],
-    flows: &[[i32; 64]; 64],
+    distances: &[[i32; utils::MAX_SIZE]; utils::MAX_SIZE],
+    flows: &[[i32; utils::MAX_SIZE]; utils::MAX_SIZE],
     is_greedy: bool) -> RunResult{
         let start_time = std::time::Instant::now();
         let mut steps: u64 = 0;

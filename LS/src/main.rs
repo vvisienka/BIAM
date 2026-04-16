@@ -1,5 +1,6 @@
 mod utils;
 mod search;
+mod search_extended;
 
 use std::fs;
 use std::error::Error;
@@ -44,6 +45,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         let instance_name = file_path.split('/').last().unwrap_or("unknown_instance");
         let opt_cost = utils::get_optimal_cost(file_path);
 
+        //Temperature parameters adaption
+        let mut t_arr = [0i32; utils::MAX_SIZE];
+        for k in 0..size { t_arr[k] = (k + 1) as i32; }
+        let (t_start, t_end) = utils::calculate_adaptive_temperatures(size, &t_arr[..size], &distances, &flows);
+
         // 2. Run the algorithms
         for run in 1..=10{
 
@@ -83,6 +89,19 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut rw_sol = init_solution;
             let res_rw = search::random_walk(size, &mut rw_sol[0..size], init_cost, avg_ls_time, &distances, &flows);
             writeln!(csv_file, "{},{},RandomWalk,{},{},{},{},{}", instance_name, opt_cost, run, res_rw.best_cost, res_rw.steps, res_rw.evaluations, res_rw.time_micros)?;
+
+            //simulated annealing
+            let mut sa_sol = init_solution;
+            let cooling_rate = 0.9;
+            let l_factor = 2;
+            let p = 10;
+            let res_sa = search_extended::simulated_annealing(size, &mut sa_sol[0..size], init_cost, &distances, &flows, cooling_rate, l_factor, p, t_start, t_end);
+            writeln!(csv_file, "{},{},SA,{},{},{},{},{}", instance_name, opt_cost, run, res_sa.best_cost, res_sa.steps, res_sa.evaluations, res_sa.time_micros)?;
+
+            //tabu search
+            // let mut ts_sol = init_solution;
+            // let res_ts = search_extended::tabu_search(size, &mut sa_sol[0..size], init_cost, &distances, &flows, cooling_rate, l_factor, p, t_start, t_end);
+            // writeln!(csv_file, "{},{},TS,{},{},{},{},{}", instance_name, opt_cost, run, res_ts.best_cost, res_ts.steps, res_ts.evaluations, res_ts.time_micros)?;
         }
 
     }

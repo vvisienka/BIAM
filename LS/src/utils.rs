@@ -160,3 +160,32 @@ pub fn get_optimal_cost(file_path: &str) -> i64 {
     //If no file - return 0
     0 
 }
+
+pub fn calculate_adaptive_temperatures(
+    size: usize,
+    initial_solution: &[i32],
+    distances: &[[i32; MAX_SIZE]; MAX_SIZE],
+    flows: &[[i32; MAX_SIZE]; MAX_SIZE],
+) -> (f64, f64) {
+    let mut deteriorating_deltas = Vec::new();
+    let samples = 500; 
+
+    let temp_sol = initial_solution.to_vec();
+
+    for _ in 0..samples {
+        let (i, j) = generate_unique_pairs(size);
+        let delta = calculate_delta(size, &temp_sol, distances, flows, i, j);
+
+        if delta > 0 {deteriorating_deltas.push(delta as f64);}
+    }
+
+    if deteriorating_deltas.is_empty() {return (1000.0, 0.001);}
+
+    let avg_delta: f64 = deteriorating_deltas.iter().sum::<f64>() / deteriorating_deltas.len() as f64;
+
+    // T = -avg_delta / ln(P)
+    let t_start = -avg_delta / 0.95f64.ln();  // P = 0.95
+    let t_end = -avg_delta / 0.01f64.ln();    // P0.01
+
+    (t_start, t_end)
+}
