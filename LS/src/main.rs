@@ -6,6 +6,7 @@ use std::fs;
 use std::error::Error;
 use std::io::Write;
 
+
 fn main() -> Result<(), Box<dyn Error>> {
     println!("=== Multi Start Local Search for QAP");
 
@@ -51,7 +52,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let (t_start, t_end) = utils::calculate_adaptive_temperatures(size, &t_arr[..size], &distances, &flows);
 
         // 2. Run the algorithms
-        for run in 1..=10{
+        for run in 1..=20{
 
             // initial solution
             let mut init_solution = [0i32; utils::MAX_SIZE];
@@ -92,16 +93,21 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             //simulated annealing
             let mut sa_sol = init_solution;
-            let cooling_rate = 0.9;
-            let l_factor = 2;
+            let cooling_rate = 0.95;
+            let l_factor = 8;
             let p = 10;
             let res_sa = search_extended::simulated_annealing(size, &mut sa_sol[0..size], init_cost, &distances, &flows, cooling_rate, l_factor, p, t_start, t_end);
             writeln!(csv_file, "{},{},SA,{},{},{},{},{}", instance_name, opt_cost, run, res_sa.best_cost, res_sa.steps, res_sa.evaluations, res_sa.time_micros)?;
 
             //tabu search
-            // let mut ts_sol = init_solution;
-            // let res_ts = search_extended::tabu_search(size, &mut sa_sol[0..size], init_cost, &distances, &flows, cooling_rate, l_factor, p, t_start, t_end);
-            // writeln!(csv_file, "{},{},TS,{},{},{},{},{}", instance_name, opt_cost, run, res_ts.best_cost, res_ts.steps, res_ts.evaluations, res_ts.time_micros)?;
+            let mut ts_sol = init_solution;
+            let p = 5;
+            let tabu_tenure = size/2;
+            let l = size * (size - 1) / 2;
+            let candidate_list_size = l/5;
+            let elite_size = candidate_list_size/5;
+            let res_ts = search_extended::tabu_search(size, &mut ts_sol[0..size], init_cost, &distances, &flows, p, tabu_tenure, candidate_list_size, elite_size);
+            writeln!(csv_file, "{},{},TS,{},{},{},{},{}", instance_name, opt_cost, run, res_ts.best_cost, res_ts.steps, res_ts.evaluations, res_ts.time_micros)?;   
         }
 
     }

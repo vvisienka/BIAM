@@ -170,11 +170,9 @@ pub fn calculate_adaptive_temperatures(
     let mut deteriorating_deltas = Vec::new();
     let samples = 500; 
 
-    let temp_sol = initial_solution.to_vec();
-
     for _ in 0..samples {
         let (i, j) = generate_unique_pairs(size);
-        let delta = calculate_delta(size, &temp_sol, distances, flows, i, j);
+        let delta = calculate_delta(size, &initial_solution, distances, flows, i, j);
 
         if delta > 0 {deteriorating_deltas.push(delta as f64);}
     }
@@ -188,4 +186,28 @@ pub fn calculate_adaptive_temperatures(
     let t_end = -avg_delta / 0.01f64.ln();    // P0.01
 
     (t_start, t_end)
+}
+
+pub fn get_elite_candidates(size:usize, candidate_list_size: usize, elite_size: usize, current_solution: &[i32], distances: &[[i32; MAX_SIZE]; MAX_SIZE], flows: &[[i32; MAX_SIZE]; MAX_SIZE]) -> (Vec<(usize, usize, i64)>, u64){
+    let mut candidates = Vec::new();
+    let mut evaluations = 0;
+    let mut rng = rand::thread_rng();
+
+    while candidates.len() < candidate_list_size {
+        let i = rand::Rng::gen_range(&mut rng, 0..size);
+        let j = rand::Rng::gen_range(&mut rng, 0..size);
+
+        if i == j { continue; }
+        
+        let delta = crate::utils::calculate_delta(size, current_solution, distances, flows, i, j);
+        evaluations += 1;
+        
+        candidates.push((i, j, delta));
+    }
+
+    // Sort candidates by delta and take the top elite_size
+    candidates.sort_by_key(|&(_, _, delta)| delta);
+    candidates.truncate(elite_size);
+
+    (candidates, evaluations)
 }
