@@ -43,10 +43,19 @@ def main():
     df['SolutionArray'] = df['Solution'].apply(parse_solution)
     df['Quality'] = df['OptCost'] / df['FinalCost']
 
-    instances = ["els19", "chr20c"] 
+    instances = ["els19", "chr20c", "esc32a"] 
     
     sns.set_theme(style="whitegrid", context="paper", font_scale=1.5)
-    palette = {'RS': '#e41a1c', 'RW': '#377eb8', 'H': '#4daf4a', 'G': '#984ea3', 'S': '#ff7f00'}
+    
+    # Unified palette and markers
+    palette = {
+        'RS': '#ff9999', 'RW': '#e41a1c',   # Light/Dark Red for Random
+        'H': 'grey',                       # Neutral for Heuristic
+        'G': '#9999ff', 'S': '#984ea3',     # Light Blue for Greedy, Purple (old TS) for Steepest
+    }
+    markers = {
+        'RS': 'o', 'RW': 'o', 'H': '^', 'G': 'D', 'S': 'D' # Steepest marker remains D
+    }
 
     os.makedirs("../plots", exist_ok=True)
 
@@ -76,10 +85,10 @@ def main():
 
         for idx, alg in enumerate(algorithms):
             alg_df = instance_df[instance_df['Algorithm'] == alg]
-            sns.scatterplot(data=alg_df, x='Quality', y='Sim_to_Others', ax=axes[idx, 0], color=palette[alg], s=80, alpha=0.6)
-            sns.scatterplot(data=alg_df, x='Quality', y='Sim_to_Optimum', ax=axes[idx, 1], color=palette[alg], s=80, alpha=0.6)
+            sns.scatterplot(data=alg_df, x='Quality', y='Sim_to_Others', ax=axes[idx, 0], color=palette[alg], marker=markers[alg], s=80, alpha=0.6)
+            sns.scatterplot(data=alg_df, x='Quality', y='Sim_to_Optimum', ax=axes[idx, 1], color=palette[alg], marker=markers[alg], s=80, alpha=0.6)
 
-        legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=palette[alg], markersize=14, label=alg) for alg in algorithms]
+        legend_handles = [plt.Line2D([0], [0], marker=markers[alg], color='w', markerfacecolor=palette[alg], markersize=14, label=alg) for alg in algorithms]
 
         for i in range(5):
             for j in range(2):
@@ -96,14 +105,14 @@ def main():
         axes[0, 1].set_title("Similarity to Global Optimum", fontsize=20, fontweight='bold', pad=0)
 
         for idx in range(5):
-            axes[idx, 0].set_ylabel("Similarity", fontsize=18, fontweight='bold', labelpad=20)
+            axes[idx, 0].set_ylabel(f"Similarity in {algorithms[idx]}", fontsize=18, fontweight='bold', labelpad=20)
         
         axes[4, 0].set_xlabel("Quality", fontsize=18, fontweight='bold', labelpad=20)
         axes[4, 1].set_xlabel("Quality", fontsize=18, fontweight='bold', labelpad=20)
 
         plt.subplots_adjust(left=0.12, right=0.95, top=0.94, bottom=0.06, hspace=0.3, wspace=0.3)
         
-        plt.savefig(f"../plots/plot_9_similarity_grid_{instance}.png", dpi=300, bbox_inches='tight')
+        plt.savefig(f"../plots/plot_9_similarity_grid_{instance}.pdf", format='pdf', dpi=300, bbox_inches='tight')
         plt.close()
         print(f"✅ Final Grid plot with internal legend generated for: {instance}")
 

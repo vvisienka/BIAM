@@ -14,7 +14,9 @@ def main():
 
     instances = ["els19", "chr20a", "esc32a"]
     sns.set_theme(style="whitegrid", context="paper", font_scale=1.6)
-    palette = {'G': '#984ea3', 'S': '#ff7f00'}
+
+    # Group G+S with shades of blue/purple
+    palette = {'G': '#9999ff', 'S': '#984ea3'} # S now uses TS's old color
 
     fig, axes = plt.subplots(1, len(instances), figsize=(22, 9), sharey=True)
     if len(instances) == 1: axes = [axes]
@@ -53,7 +55,7 @@ def main():
     axes[0].set_ylabel("Algorithm Quality", fontsize=20, fontweight='bold', labelpad=25)
     
     plt.subplots_adjust(left=0.1, right=0.95, top=0.88, bottom=0.18, wspace=0.15)
-    plt.savefig("../plots/plot_8_restarts_combined.png", dpi=300, bbox_inches='tight')
+    plt.savefig("../plots/plot_8_restarts_combined.pdf", dpi=300, format='pdf', bbox_inches='tight')
     plt.close()
 
 if __name__ == "__main__":

@@ -16,16 +16,18 @@ def main():
     df['InitQuality'] = df['OptCost'] / df['InitCost']
     df['FinalQuality'] = df['OptCost'] / df['FinalCost']
 
-    instances = df['Instance'].unique()
+    instances = ["els19", "chr20c", "esc32a"]
     sns.set_theme(style="whitegrid", context="paper", font_scale=1.2)
-    palette = {'G': '#984ea3', 'S': '#ff7f00'}
-    markers = {'G': 'o', 'S': 'o'}
+    # Group G+S with shades of blue/purple and same marker
+    palette = {'G': '#9999ff', 'S': '#984ea3'} # S now uses TS's old color
+    markers = {'G': 'D', 'S': 'D'}
 
     for instance in instances:
         instance_df = df[df['Instance'] == instance]
         
         # Create a side-by-side plot for G and S
         fig, axes = plt.subplots(1, 2, figsize=(14, 6), sharex=True, sharey=True)
+        
         
         for ax, alg in zip(axes, ['G', 'S']):
             alg_df = instance_df[instance_df['Algorithm'] == alg]
@@ -51,9 +53,11 @@ def main():
             ax.set_xlabel("Initial Quality", fontsize=20, fontweight='bold', labelpad=25)
             if ax == axes[0]:
                 ax.set_ylabel("Final Quality", fontsize=20, fontweight='bold', labelpad=25)
+            
         # plt.suptitle(f"Search Space Structure: {instance}", fontsize=16, fontweight='bold')
         plt.tight_layout()
-        plt.savefig(f"../plots/plot_7_scatter_{instance}.png", dpi=300)
+        plt.ylim(0.3, 1.01)
+        plt.savefig(f"../plots/plot_7_scatter_{instance}.pdf", format='pdf', dpi=300)
         plt.close()
         print(f"✅ Scatter Plot Generated for {instance}")
 
