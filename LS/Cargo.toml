@@ -13,3 +13,7 @@ path = "src/main.rs"
 [[bin]]
 name = "scatter"
 path = "src/scatter.rs"
+
+[[bin]]
+name = "experiment"
+path = "src/experiment.rs"
